@@ -1,0 +1,29 @@
+package repository
+
+import "github.com/waiter/back/domain/entity"
+
+type RestaurantRepository interface {
+	Create(restaurant *entity.Restaurant) error
+	FindByID(id string) (*entity.Restaurant, error)
+	FindAll() ([]entity.Restaurant, error)
+}
+
+type TableRepository interface {
+	Create(table *entity.Table) error
+	FindByID(id string) (*entity.Table, error)
+	FindByRestaurantID(restaurantID string) ([]entity.Table, error)
+	FindByQRCode(qrCode string) (*entity.Table, error)
+}
+
+type RequestRepository interface {
+	Create(request *entity.Request) error
+	FindByID(id string) (*entity.Request, error)
+	FindActiveByRestaurantID(restaurantID string) ([]entity.Request, error)
+	FindByTableID(tableID string) ([]entity.Request, error)
+	UpdateStatus(id string, status entity.RequestStatus) error
+}
+
+type FeedbackRepository interface {
+	Create(feedback *entity.Feedback) error
+	FindByTableID(tableID string) ([]entity.Feedback, error)
+}
