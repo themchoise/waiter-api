@@ -7,11 +7,17 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/waiter/back/application/usecase"
 	"github.com/waiter/back/config"
+	_ "github.com/waiter/back/docs"
 	"github.com/waiter/back/infrastructure/persistence"
 	ws "github.com/waiter/back/infrastructure/websocket"
 	handler "github.com/waiter/back/interfaces/http"
 )
 
+// @title          Waiter API
+// @version        1.0
+// @description    Sistema de llamado de mozos para restaurantes
+// @host           localhost:8080
+// @BasePath       /api/v1
 func main() {
 	_ = godotenv.Load()
 

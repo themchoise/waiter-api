@@ -1,0 +1,406 @@
+basePath: /api/v1
+definitions:
+  entity.Feedback:
+    properties:
+      comment:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      score:
+        type: integer
+      table_id:
+        type: string
+    type: object
+  entity.Request:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      status:
+        $ref: '#/definitions/entity.RequestStatus'
+      table_id:
+        type: string
+      type:
+        $ref: '#/definitions/entity.RequestType'
+    type: object
+  entity.RequestStatus:
+    enum:
+    - PENDING
+    - IN_PROCESS
+    - DONE
+    type: string
+    x-enum-varnames:
+    - Pending
+    - InProcess
+    - Done
+  entity.RequestType:
+    enum:
+    - CALL_WAITER
+    - ASK_BILL
+    - ASK_HELP
+    type: string
+    x-enum-varnames:
+    - CallWaiter
+    - AskBill
+    - AskHelp
+  entity.Restaurant:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      plan:
+        type: string
+    type: object
+  entity.Table:
+    properties:
+      id:
+        type: string
+      number:
+        type: integer
+      qr_code:
+        type: string
+      restaurant_id:
+        type: string
+    type: object
+  http.createTableInput:
+    properties:
+      number:
+        type: integer
+    required:
+    - number
+    type: object
+  http.updateRequestInput:
+    properties:
+      status:
+        $ref: '#/definitions/entity.RequestStatus'
+    required:
+    - status
+    type: object
+  usecase.CreateFeedbackInput:
+    properties:
+      comment:
+        type: string
+      score:
+        maximum: 5
+        minimum: 1
+        type: integer
+      table_id:
+        type: string
+    required:
+    - score
+    - table_id
+    type: object
+  usecase.CreateRequestInput:
+    properties:
+      table_id:
+        type: string
+      type:
+        $ref: '#/definitions/entity.RequestType'
+    required:
+    - table_id
+    - type
+    type: object
+  usecase.CreateRestaurantInput:
+    properties:
+      name:
+        type: string
+      plan:
+        type: string
+    required:
+    - name
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Sistema de llamado de mozos para restaurantes
+  title: Waiter API
+  version: "1.0"
+paths:
+  /api/v1/feedback:
+    post:
+      consumes:
+      - application/json
+      description: Registra el feedback de un cliente sobre el servicio
+      parameters:
+      - description: Datos del feedback
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/usecase.CreateFeedbackInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Feedback'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Registrar feedback
+      tags:
+      - feedback
+  /api/v1/requests:
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva solicitud de mesa (llamar mozo, pedir cuenta, ayuda)
+      parameters:
+      - description: Datos de la solicitud
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/usecase.CreateRequestInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Request'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear solicitud
+      tags:
+      - requests
+  /api/v1/requests/{requestId}:
+    patch:
+      consumes:
+      - application/json
+      description: Actualiza el estado de una solicitud (marcar como atendida)
+      parameters:
+      - description: ID de la solicitud
+        in: path
+        name: requestId
+        required: true
+        type: string
+      - description: Nuevo estado
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.updateRequestInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Actualizar estado de solicitud
+      tags:
+      - requests
+  /api/v1/restaurants:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo restaurante
+      parameters:
+      - description: Datos del restaurante
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/usecase.CreateRestaurantInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Restaurant'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear restaurante
+      tags:
+      - restaurants
+  /api/v1/restaurants/{restaurantId}:
+    get:
+      description: Retorna un restaurante por su ID
+      parameters:
+      - description: ID del restaurante
+        in: path
+        name: restaurantId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Restaurant'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener restaurante
+      tags:
+      - restaurants
+  /api/v1/restaurants/{restaurantId}/requests/active:
+    get:
+      description: Retorna las solicitudes activas de un restaurante
+      parameters:
+      - description: ID del restaurante
+        in: path
+        name: restaurantId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Request'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener solicitudes activas
+      tags:
+      - requests
+  /api/v1/restaurants/{restaurantId}/tables:
+    get:
+      description: Retorna las mesas de un restaurante
+      parameters:
+      - description: ID del restaurante
+        in: path
+        name: restaurantId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Table'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Listar mesas
+      tags:
+      - tables
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva mesa para un restaurante
+      parameters:
+      - description: ID del restaurante
+        in: path
+        name: restaurantId
+        required: true
+        type: string
+      - description: Datos de la mesa
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.createTableInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Table'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Crear mesa
+      tags:
+      - tables
+  /api/v1/tables/{tableId}/status:
+    get:
+      description: Retorna las solicitudes de una mesa específica
+      parameters:
+      - description: ID de la mesa
+        in: path
+        name: tableId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Request'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Obtener estado de mesa
+      tags:
+      - requests
+swagger: "2.0"
